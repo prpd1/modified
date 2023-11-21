@@ -1,19 +1,21 @@
-FROM centos
+FROM ubuntu:14.04
+RUN apt-get update && apt-get -y upgrade
 
-MAINTAINER hello@gritfy.com
+RUN apt-get -y install software-properties-common
+RUN add-apt-repository ppa:webupd8team/java
+RUN apt-get -y update
 
-RUN mkdir /opt/tomcat/
+# Accept the license
+RUN echo "oracle-java7-installer shared/accepted-oracle-license-v1-1 boolean true" | debconf-set-selections
 
-WORKDIR /opt/tomcat
-RUN curl -O https://www-eu.apache.org/dist/tomcat/tomcat-8/v8.5.40/bin/apache-tomcat-8.5.40.tar.gz
-RUN tar -xvzf apache-tomcat-8.5.40.tar.gz
-RUN mv apache-tomcat-8.5.40/* /opt/tomcat/.
-RUN yum -y install java
-RUN java -version
+RUN apt-get -y install oracle-java7-installer
 
-WORKDIR /opt/tomcat/webapps
-RUN curl -O -L https://github.com/AKSarav/SampleWebApp/raw/master/dist/SampleWebApp.war
+# Here comes the tomcat installation
+RUN apt-get -y install tomcat7
+RUN echo "JAVA_HOME=/usr/lib/jvm/java-7-oracle" >> /etc/default/tomcat7
 
+# Expose the default tomcat port
 EXPOSE 8080
 
-CMD ["/opt/tomcat/bin/catalina.sh", "run"]
+# Start the tomcat (and leave it hanging)
+CMD service tomcat7 start && tail -f /var/lib/tomcat7/logs/catalina.out
